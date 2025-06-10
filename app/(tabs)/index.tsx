@@ -1,12 +1,15 @@
-import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, Platform, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import * as Haptics from 'expo-haptics';
-import { Shield, MapPin, Phone, Clock } from 'lucide-react-native';
+import { Shield, MapPin, Phone, Clock, Map } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withRepeat, withTiming } from 'react-native-reanimated';
+import { RequireAuth } from '../components/RequireAuth';
+import { useEmergency, type EmergencyType } from '../hooks/useEmergency';
+import { EmergencyAIAssistant } from '../components/EmergencyAIAssistant';
 
 interface LocationData {
   latitude: number;
@@ -14,11 +17,13 @@ interface LocationData {
   timestamp: number;
 }
 
-export default function EmergencyScreen() {
+function EmergencyScreenContent() {
+  const { activeEmergency, loading, error, triggerEmergency, cancelEmergency } = useEmergency();
   const [location, setLocation] = useState<LocationData | null>(null);
   const [isEmergencyActive, setIsEmergencyActive] = useState(false);
   const [emergencyStartTime, setEmergencyStartTime] = useState<Date | null>(null);
-  
+  const [showMap, setShowMap] = useState(false);
+
   const scaleValue = useSharedValue(1);
   const pulseValue = useSharedValue(1);
 
@@ -27,17 +32,20 @@ export default function EmergencyScreen() {
   }, []);
 
   useEffect(() => {
-    if (isEmergencyActive) {
-      // Start pulsing animation for emergency state
+    if (activeEmergency) {
+      setIsEmergencyActive(true);
+      setEmergencyStartTime(new Date(activeEmergency.createdAt));
       pulseValue.value = withRepeat(
         withTiming(1.1, { duration: 1000 }),
         -1,
         true
       );
     } else {
+      setIsEmergencyActive(false);
+      setEmergencyStartTime(null);
       pulseValue.value = withTiming(1, { duration: 300 });
     }
-  }, [isEmergencyActive]);
+  }, [activeEmergency]);
 
   const getLocationPermission = async () => {
     try {
@@ -69,7 +77,16 @@ export default function EmergencyScreen() {
     }
   };
 
-  const handleEmergencyPress = () => {
+  const handleEmergencyPress = async () => {
+    if (!location) {
+      Alert.alert(
+        'Location Required',
+        'Please enable location services to use the emergency features.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     scaleValue.value = withSpring(0.95, { duration: 100 }, () => {
       scaleValue.value = withSpring(1, { duration: 200 });
     });
@@ -77,28 +94,30 @@ export default function EmergencyScreen() {
     triggerHapticFeedback();
 
     if (!isEmergencyActive) {
-      setIsEmergencyActive(true);
-      setEmergencyStartTime(new Date());
-      getCurrentLocation();
-      
-      // Simulate sending alerts
-      Alert.alert(
-        'Emergency Alert Sent',
-        'Your emergency contacts have been notified with your current location.',
-        [{ text: 'OK' }]
-      );
+      try {
+        await triggerEmergency('SOS', {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          accuracy: location.timestamp
+        });
+      } catch (error) {
+        Alert.alert('Error', error instanceof Error ? error.message : 'Failed to trigger emergency');
+      }
     } else {
       Alert.alert(
         'Cancel Emergency',
         'Are you sure you want to cancel the emergency alert?',
         [
           { text: 'No', style: 'cancel' },
-          { 
-            text: 'Yes', 
+          {
+            text: 'Yes',
             style: 'destructive',
-            onPress: () => {
-              setIsEmergencyActive(false);
-              setEmergencyStartTime(null);
+            onPress: async () => {
+              try {
+                await cancelEmergency();
+              } catch (error) {
+                Alert.alert('Error', error instanceof Error ? error.message : 'Failed to cancel emergency');
+              }
             }
           }
         ]
@@ -135,6 +154,9 @@ export default function EmergencyScreen() {
           <Text style={[styles.subtitle, { color: isEmergencyActive ? colors.white : colors.gray[600] }]}>
             Emergency Response
           </Text>
+          {error && (
+            <Text style={styles.errorText}>{error}</Text>
+          )}
         </View>
 
         <View style={styles.content}>
@@ -154,14 +176,26 @@ export default function EmergencyScreen() {
               <TouchableOpacity
                 style={[
                   styles.emergencyButton,
-                  { backgroundColor: isEmergencyActive ? colors.warning[500] : colors.primary[600] }
+                  {
+                    backgroundColor: isEmergencyActive
+                      ? colors.warning[500]
+                      : loading || !location
+                        ? colors.gray[400]
+                        : colors.primary[600]
+                  }
                 ]}
                 onPress={handleEmergencyPress}
                 activeOpacity={0.8}
+                disabled={loading || !location}
               >
                 <Shield size={48} color={colors.white} strokeWidth={2.5} />
                 <Text style={styles.buttonText}>
-                  {isEmergencyActive ? 'CANCEL EMERGENCY' : 'EMERGENCY SOS'}
+                  {loading
+                    ? 'PROCESSING...'
+                    : isEmergencyActive
+                      ? 'CANCEL EMERGENCY'
+                      : 'EMERGENCY SOS'
+                  }
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -178,21 +212,57 @@ export default function EmergencyScreen() {
             )}
 
             <View style={styles.quickActions}>
-              <TouchableOpacity style={styles.quickActionButton}>
+              <TouchableOpacity
+                style={styles.quickActionButton}
+                onPress={() => setShowMap(true)}
+              >
+                <Map size={20} color={colors.secondary[600]} />
+                <Text style={styles.quickActionText}>View Map</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.quickActionButton}
+                onPress={() => {
+                  if (Platform.OS !== 'web') {
+                    Linking.openURL('tel:911');
+                  }
+                }}
+              >
                 <Phone size={20} color={colors.secondary[600]} />
                 <Text style={styles.quickActionText}>Call 911</Text>
               </TouchableOpacity>
             </View>
           </View>
+
+          {/* AI Assistant Section */}
+          <View style={styles.aiAssistantSection}>
+            <Text style={styles.aiAssistantTitle}>Emergency Guidance</Text>
+            <EmergencyAIAssistant />
+          </View>
         </View>
 
         <View style={styles.footer}>
           <Text style={[styles.footerText, { color: isEmergencyActive ? colors.white : colors.gray[500] }]}>
-            Press and hold the emergency button to activate
+            {loading
+              ? 'Processing emergency request...'
+              : !location
+                ? 'Waiting for location...'
+                : showMap
+                  ? 'Viewing emergency services map'
+                  : 'Press the emergency button to activate'
+            }
           </Text>
         </View>
       </LinearGradient>
     </SafeAreaView>
+  );
+}
+
+export default function EmergencyScreen() {
+  return (
+    <RequireAuth>
+      <EmergencyScreenContent />
+    </RequireAuth>
   );
 }
 
@@ -324,5 +394,54 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'Inter-Regular',
     textAlign: 'center',
+  },
+  errorText: {
+    color: colors.warning[500],
+    fontSize: 14,
+    fontFamily: 'Inter-Regular',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  mapContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  closeMapButton: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    zIndex: 1,
+  },
+  closeMapButtonText: {
+    color: colors.gray[900],
+    fontSize: 14,
+    fontFamily: 'Inter-Medium',
+  },
+  aiAssistantSection: {
+    width: '100%',
+    marginTop: 24,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    elevation: 2,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  aiAssistantTitle: {
+    fontSize: 18,
+    fontFamily: 'Inter-Bold',
+    color: colors.gray[900],
+    marginBottom: 16,
   },
 });

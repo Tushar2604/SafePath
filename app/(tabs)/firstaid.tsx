@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Search, Heart, Brain, Zap, TriangleAlert as AlertTriangle, Phone } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { RequireAuth } from '../components/RequireAuth';
 
 interface FirstAidTopic {
   id: string;
@@ -95,7 +96,7 @@ export default function FirstAidScreen() {
   };
 
   const TopicCard = ({ topic }: { topic: FirstAidTopic }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.topicCard}
       onPress={() => setSelectedTopic(topic)}
     >
@@ -119,18 +120,18 @@ export default function FirstAidScreen() {
   const TopicDetail = ({ topic }: { topic: FirstAidTopic }) => (
     <ScrollView style={styles.detailView}>
       <View style={styles.detailHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => setSelectedTopic(null)}
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        
+
         <View style={styles.detailTitle}>
           {topic.icon}
           <Text style={styles.detailTitleText}>{topic.title}</Text>
         </View>
-        
+
         <View style={[styles.severityBadge, { backgroundColor: getSeverityColor(topic.severity) }]}>
           <Text style={styles.severityText}>{topic.severity.toUpperCase()}</Text>
         </View>
@@ -159,55 +160,59 @@ export default function FirstAidScreen() {
 
   if (selectedTopic) {
     return (
-      <SafeAreaView style={styles.container}>
-        <TopicDetail topic={selectedTopic} />
-      </SafeAreaView>
+      <RequireAuth fallbackMessage="Please sign in to access first aid information">
+        <SafeAreaView style={styles.container}>
+          <TopicDetail topic={selectedTopic} />
+        </SafeAreaView>
+      </RequireAuth>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>First Aid Guide</Text>
-        <Text style={styles.subtitle}>Emergency medical guidance</Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
-          <Search size={20} color={colors.gray[400]} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search first aid topics..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholderTextColor={colors.gray[400]}
-          />
-        </View>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <View style={styles.emergencyBanner}>
-          <Phone size={20} color={colors.white} />
-          <Text style={styles.emergencyBannerText}>
-            In a life-threatening emergency, call 911 first!
-          </Text>
+    <RequireAuth fallbackMessage="Please sign in to access first aid information">
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>First Aid Guide</Text>
+          <Text style={styles.subtitle}>Emergency medical guidance</Text>
         </View>
 
-        <View style={styles.topicsList}>
-          {filteredTopics.map((topic) => (
-            <TopicCard key={topic.id} topic={topic} />
-          ))}
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBox}>
+            <Search size={20} color={colors.gray[400]} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search first aid topics..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholderTextColor={colors.gray[400]}
+            />
+          </View>
         </View>
 
-        <View style={styles.disclaimer}>
-          <Text style={styles.disclaimerTitle}>Important Disclaimer</Text>
-          <Text style={styles.disclaimerText}>
-            This information is for educational purposes only and should not replace professional medical advice. 
-            Always call emergency services for serious medical emergencies.
-          </Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          <View style={styles.emergencyBanner}>
+            <Phone size={20} color={colors.white} />
+            <Text style={styles.emergencyBannerText}>
+              In a life-threatening emergency, call 911 first!
+            </Text>
+          </View>
+
+          <View style={styles.topicsList}>
+            {filteredTopics.map((topic) => (
+              <TopicCard key={topic.id} topic={topic} />
+            ))}
+          </View>
+
+          <View style={styles.disclaimer}>
+            <Text style={styles.disclaimerTitle}>Important Disclaimer</Text>
+            <Text style={styles.disclaimerText}>
+              This information is for educational purposes only and should not replace professional medical advice.
+              Always call emergency services for serious medical emergencies.
+            </Text>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </RequireAuth>
   );
 }
 
