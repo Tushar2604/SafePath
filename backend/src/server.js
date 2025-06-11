@@ -14,11 +14,11 @@ const errorHandler = require('./middleware/errorHandler');
 
 // Route imports
 const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/users');
+//const userRoutes = require('./routes/users');
 const emergencyRoutes = require('./routes/emergency');
 const contactRoutes = require('./routes/contacts');
-const locationRoutes = require('./routes/location');
-const notificationRoutes = require('./routes/notifications');
+// const locationRoutes = require('./routes/location'); // Commented out because the module is missing
+//const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const server = createServer(app);
@@ -78,11 +78,11 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/users', userRoutes);
+//app.use('/api/users', userRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/contacts', contactRoutes);
-app.use('/api/location', locationRoutes);
-app.use('/api/notifications', notificationRoutes);
+//app.use('/api/location', locationRoutes);
+//app.use('/api/notifications', notificationRoutes);
 
 // Socket.IO connection handling
 io.on('connection', (socket) => {
@@ -129,7 +129,7 @@ app.use('*', (req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3001;
 
 server.listen(PORT, () => {
   logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);

@@ -2,6 +2,9 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { Shield, Users, Heart, User } from 'lucide-react-native';
 import { colors } from '@/constants/colors';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import { InAppNotification } from '../components/InAppNotification';
+
 
 export default function TabLayout() {
   return (
@@ -42,6 +45,18 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="contacts/add"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="contacts/edit"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
         name="firstaid"
         options={{
           title: 'First Aid',
@@ -62,3 +77,4 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+

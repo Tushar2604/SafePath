@@ -78,6 +78,126 @@ export default function FirstAidScreen() {
         'Apply pressure to pressure points if direct pressure fails',
         'Treat for shock and monitor breathing'
       ]
+    },
+    {
+      id: '5',
+      title: 'Choking',
+      category: 'Airway Emergency',
+      icon: <AlertTriangle size={24} color={colors.primary[600]} />,
+      severity: 'high',
+      steps: [
+        'Ask "Are you choking?" If they can speak, encourage coughing',
+        'If they cannot speak, perform abdominal thrusts (Heimlich maneuver)',
+        'Stand behind the person, wrap arms around their waist',
+        'Make a fist above their navel, grasp with other hand',
+        'Give quick, upward thrusts',
+        'Call 911 if the person becomes unconscious'
+      ]
+    },
+    {
+      id: '6',
+      title: 'Heat Stroke',
+      category: 'Environmental Emergency',
+      icon: <AlertTriangle size={24} color={colors.warning[600]} />,
+      severity: 'high',
+      steps: [
+        'Call emergency services immediately',
+        'Move person to a cool place',
+        'Remove excess clothing',
+        'Cool the person with wet cloths or ice packs',
+        'Fan the person to increase cooling',
+        'Monitor breathing and consciousness'
+      ]
+    },
+    {
+      id: '7',
+      title: 'Hypothermia',
+      category: 'Environmental Emergency',
+      icon: <AlertTriangle size={24} color={colors.primary[600]} />,
+      severity: 'high',
+      steps: [
+        'Call emergency services if severe',
+        'Move to a warm, dry location',
+        'Remove wet clothing',
+        'Warm the person gradually with blankets',
+        'Give warm, non-alcoholic drinks if conscious',
+        'Monitor breathing and consciousness'
+      ]
+    },
+    {
+      id: '8',
+      title: 'Diabetic Emergency',
+      category: 'Metabolic Emergency',
+      icon: <AlertTriangle size={24} color={colors.warning[600]} />,
+      severity: 'medium',
+      steps: [
+        'Check if person is conscious and responsive',
+        'If conscious and can swallow, give sugar or glucose tablets',
+        'If unconscious, call 911 immediately',
+        'Check for medical ID bracelet',
+        'Monitor breathing and consciousness',
+        'Stay with them until help arrives'
+      ]
+    },
+    {
+      id: '9',
+      title: 'Anaphylaxis',
+      category: 'Allergic Emergency',
+      icon: <AlertTriangle size={24} color={colors.primary[600]} />,
+      severity: 'high',
+      steps: [
+        'Call emergency services immediately',
+        'Check for EpiPen and help administer if available',
+        'Help person into comfortable position',
+        'Loosen tight clothing',
+        'Monitor breathing and consciousness',
+        'Be prepared to perform CPR if needed'
+      ]
+    },
+    {
+      id: '10',
+      title: 'Burns',
+      category: 'Trauma',
+      icon: <AlertTriangle size={24} color={colors.warning[600]} />,
+      severity: 'medium',
+      steps: [
+        'Remove person from source of burn',
+        'Cool burn under running water for 10-20 minutes',
+        'Remove jewelry near burn if possible',
+        'Cover with sterile dressing',
+        'Do not pop blisters or apply creams',
+        'Call 911 for severe burns'
+      ]
+    },
+    {
+      id: '11',
+      title: 'Fracture',
+      category: 'Trauma',
+      icon: <AlertTriangle size={24} color={colors.warning[600]} />,
+      severity: 'medium',
+      steps: [
+        'Call emergency services if severe',
+        'Keep person still and calm',
+        'Do not try to realign bones',
+        'Immobilize the injured area',
+        'Apply ice to reduce swelling',
+        'Monitor for signs of shock'
+      ]
+    },
+    {
+      id: '12',
+      title: 'Poisoning',
+      category: 'Toxic Emergency',
+      icon: <AlertTriangle size={24} color={colors.primary[600]} />,
+      severity: 'high',
+      steps: [
+        'Call Poison Control Center (1-800-222-1222)',
+        'Do not induce vomiting unless instructed',
+        'Remove person from toxic substance',
+        'Check breathing and consciousness',
+        'Save container or substance for identification',
+        'Call 911 if severe symptoms develop'
+      ]
     }
   ];
 

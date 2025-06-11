@@ -13,7 +13,7 @@ const api = axios.create({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
     },
-    timeout: 30000, // 30 seconds for AI requests
+    timeout: 10000, // 10 seconds for regular requests
 });
 
 // Add request interceptor to include auth token
@@ -27,7 +27,6 @@ api.interceptors.request.use(
                 baseURL: config.baseURL,
                 fullUrl: `${config.baseURL}${config.url}`,
                 hasToken: !!token,
-                headers: config.headers,
                 timeout: config.timeout
             });
 
@@ -35,9 +34,9 @@ api.interceptors.request.use(
                 config.headers.Authorization = `Bearer ${token}`;
             }
 
-            // Set longer timeout for AI assistance endpoint
-            if (config.url?.includes('/ai-assist')) {
-                config.timeout = 30000; // 30 seconds for AI requests
+            // Set longer timeout for emergency endpoint
+            if (config.url?.includes('/emergency/trigger')) {
+                config.timeout = 30000; // 30 seconds for emergency requests
             }
 
             return config;
@@ -62,7 +61,6 @@ api.interceptors.response.use(
         console.log(`API Response [${response.config.method?.toUpperCase()}] ${response.config.url}:`, {
             status: response.status,
             statusText: response.statusText,
-            headers: response.headers,
             data: response.data
         });
         return response;
@@ -78,16 +76,13 @@ api.interceptors.response.use(
             statusText: error.response?.statusText,
             data: error.response?.data,
             message: error.message,
-            code: error.code,
-            headers: error.config?.headers,
-            isAxiosError: error.isAxiosError,
-            stack: error.stack
+            code: error.code
         });
 
         // Handle specific error cases
         if (error.code === 'ECONNABORTED') {
             return Promise.reject({
-                message: 'Request timed out. The AI service is taking longer than expected. Please try again.',
+                message: 'The request took too long. Please check your internet connection and try again.',
                 isTimeout: true
             });
         }
@@ -95,18 +90,11 @@ api.interceptors.response.use(
         if (!error.response) {
             // Network error (no response received)
             return Promise.reject({
-                message: 'Network error: Unable to connect to the server. Please check your internet connection and try again.',
+                message: 'Network error: Unable to connect to the server. Please check your internet connection.',
                 isNetworkError: true
             });
         }
 
-        if (error.response.status === 401) {
-            console.error('Unauthorized access - token may be invalid or expired');
-            return Promise.reject({
-                message: 'Authentication error: Please sign in again.',
-                isAuthError: true
-            });
-        }
         // Handle other error cases
         const errorMessage = (error.response?.data as { error?: string; message?: string })?.error ||
             (error.response?.data as { error?: string; message?: string })?.message ||

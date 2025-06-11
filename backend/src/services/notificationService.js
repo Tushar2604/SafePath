@@ -7,29 +7,36 @@ const logger = require('../utils/logger');
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      privateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID,
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      clientId: process.env.FIREBASE_CLIENT_ID,
-      authUri: process.env.FIREBASE_AUTH_URI,
-      tokenUri: process.env.FIREBASE_TOKEN_URI,
+      projectId: process.env.FIREBASE_PROJECT_ID ?? "safepath-e928d",
+      privateKeyId: process.env.FIREBASE_PRIVATE_KEY_ID ?? "0b745ecdd448d9466f26c8b28c0dfc643318fec3",
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') ?? "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDDqpARGJ+v0Lid\ns5SZhcrzCrG3pxCan4q8IalZp9ThgHPerKDQC1QXskry4im2zLu9pULrUpihg39u\nBSM+j3dAEfIvOXWZc6BuhJ3ew+5znQBNBon+qHeR5Y0PmSpcT6E/9BepbdunMpYi\nUV6s1QFcObnf0VsNL5EzKI+CD6M+Np6bRj2BmVr2QZ8rsZ03iXTE1NrBsSSbgGB1\n2AI7st2s00sb6j+dBJysZCHnydJccTMqn01bz7j4zkZbEAGqnBVoWwpRiJpqgOnw\nd7MHa3BR6cuaZ/UpkDjYGhhnmqaJe9KYgomAp2Ha8eA23OeTkcfU93p06C58FdIr\nbsR7f+y5AgMBAAECggEABxEJO2acfAVEMEwWfLQKvlvkvP+yEgqiXLpe8H6m/yCV\nKyeaPXBgojmRGSloh9I9hKiL9X/BC90kliP0eMqbbCmdUN+/7mxi2AWijRcPwj9i\ncWW1gUEzAE2wDBG5miYYv6c1zx1Xe/DP/Jv4mOsgdMhzmWmFjWuxQhv1H1BEYMzD\nI5G/m0RErMRokGXkX21GcrJ6jZq7q5SGjrOESz/O2nc3+IIJl0QnmYI/xQRtGvI0\nbhL/tmBuG2bkmKcXtCMHMer8MHy8p7vwvawvFg56ubFUGDsP9G6vjj67zcgLWG6f\nxP0ppXBbHrFPm7mPDNqYjMWa9HaqdGaWi7KJ6wJu2QKBgQDgOzqiuVzS38s1aZ7H\n5fb76bQ28nqQiv5oikX7gGIEwg+V61ZBEa92YGOn5nDQR+aBUUQ0idubLHOX9UNS\n3mVz035PnT6Z9c5/ItbK9UUnppjx9PCA9Tab0qDZ33YlFGAOKIwlHnSoCTz1fXwT\niGVhJo8hTuZCsFrW0JJCGOE7gwKBgQDfY0pOQ5+KERsOHtMUlMPOWj8BZNaKJu97\ngD6pDi2yVba6xX/8ev353jNv9ztPr568TFq8R5dJrkxO7jWhZbIf7cwiIxyep0A4\n4C4OTyBDN/bu3n9XarJaXfC37S3tAxBy7WwMX5P7/sAVtRgJpVN5kb2hiQzIKAJi\nb3yNzYPWEwKBgQCfv1Kcz3Yj/bAmE2M9gsYc3ni3lLRg+cUZ8Ti+Xs52GVNFOW4v\n2UuqCC23VmMU38SGaMEwtO4xdM+9eMxH441foVMhoSMSSJ6e0NE5stdb0kKwThJx\nrUEEbmCOF7dx3zw3mgeOAk6V0E8PjiCxQcEIH5Jk5nMBG+b7l4g7csIzxQKBgFdj\nml//qFv00Sa2/FBi2i7RszAyaJNnI+ymgNzVxR6s1W0/chAtdUnYmTrF9xf3VhvH\nqv9Y6mBSpVuDaMuY4xQGjQMVxU5zk3YsjRff8HkbXaiYtixWeytK8K6jRIIh3r93\nDfvRMC02vaJAVAUB/iPi1dJpsOxkanpjrtAyg86tAoGAIrdqPQ+lSO4Yh88vVu9i\nWAlRqViAE523T7WnkWeDHeMpD4rDSKXfyUUmvCHlsEnlBlGVg2CaPKky8nYpSh61\nGtbmQGMQRNNQ1Er8Pvz5PfWkm1gDstLKJ0fNXIwgSqm8z7Wq4KAGX79/pT8DKDwY\nq2HzFMNevwTPP/9dlxmiDS8=\n-----END PRIVATE KEY-----\n",
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL ?? "firebase-adminsdk-fbsvc@safepath-e928d.iam.gserviceaccount.com",
+      clientId: process.env.FIREBASE_CLIENT_ID ?? "106166107178783134768",
+      authUri: process.env.FIREBASE_AUTH_URI ?? "https://accounts.google.com/o/oauth2/auth",
+      tokenUri: process.env.FIREBASE_TOKEN_URI ?? "https://oauth2.googleapis.com/token",
     })
   });
 }
 
-// Initialize Twilio
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+// Initialize Twilio client with fallback
+let twilioClient = null;
+try {
+  if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+    twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    logger.info('Twilio client initialized successfully');
+  } else {
+    logger.warn('Twilio credentials missing - SMS notifications will be disabled');
+  }
+} catch (err) {
+  logger.warn('Twilio client initialization skipped:', err.message);
+}
 
 // Initialize Nodemailer
-const emailTransporter = nodemailer.createTransporter({
-  service: process.env.EMAIL_SERVICE,
+const emailTransporter = nodemailer.createTransport({
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
+    pass: process.env.EMAIL_PASSWORD
   }
 });
 
@@ -169,9 +176,9 @@ class NotificationService {
       };
 
       const response = await admin.messaging().sendMulticast(message);
-      
+
       logger.info(`Push notifications sent: ${response.successCount}/${tokens.length}`);
-      
+
       return {
         success: response.successCount > 0,
         successCount: response.successCount,
@@ -190,7 +197,7 @@ class NotificationService {
 
     try {
       const result = await this.sendSMS(contact.phone, message);
-      
+
       if (contact.email) {
         await this.sendEmail({
           to: contact.email,
